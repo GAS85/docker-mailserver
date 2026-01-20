@@ -24,6 +24,7 @@ function setup_file() {
   _common_container_setup 'CUSTOM_SETUP_ARGUMENTS'
   _wait_for_service rspamd-redis
   _wait_for_service rspamd
+  _wait_for_rspamd_port_in_container
 }
 
 # We want each test to start with a clean state.
@@ -194,7 +195,7 @@ function __create_key() {
   local KEYSIZE=${4:-2048}
   local FORCE=${5:-}
 
-  # Not quoting is intended here as we would othewise provide
+  # Not quoting is intended here as we would otherwise provide
   # the argument "''" (empty string), which would cause errors
   # shellcheck disable=SC2086
   _run_in_container setup config dkim ${FORCE} \

@@ -60,12 +60,12 @@ function _install_utils() {
   _log 'debug' 'Installing utils sourced from Github'
 
   _log 'trace' 'Installing jaq'
-  local JAQ_TAG='v2.1.0'
+  local JAQ_TAG='v2.3.0'
   curl -sSfL "https://github.com/01mf02/jaq/releases/download/${JAQ_TAG}/jaq-$(uname -m)-unknown-linux-gnu" -o /usr/local/bin/jaq
   chmod +x /usr/local/bin/jaq
 
   _log 'trace' 'Installing step'
-  local STEP_RELEASE='0.28.2'
+  local STEP_RELEASE='0.28.7'
   curl -sSfL "https://github.com/smallstep/cli/releases/download/v${STEP_RELEASE}/step_linux_${STEP_RELEASE}_${ARCH_B}.tar.gz" \
     | tar -xz --directory /usr/local/bin --no-same-owner --strip-components=2 "step_${STEP_RELEASE}/bin/step"
 
@@ -83,8 +83,8 @@ function _install_packages() {
 
   local ANTI_VIRUS_SPAM_PACKAGES=(
     clamav clamav-daemon
-    # spamassassin is used only with amavisd-new, while pyzor + razor are used by spamassasin
-    amavisd-new spamassassin pyzor razor
+    # spamassassin is used only with amavisd-new
+    amavisd-new spamassassin
   )
 
   # predominantly for Amavis support
@@ -161,10 +161,15 @@ function _install_dovecot() {
     # - 2.3.21: https://salsa.debian.org/debian/dovecot/-/tree/stable/bookworm-backports
 
     _log 'trace' 'Adding third-party package repository (Dovecot)'
-    curl -fsSL https://repo.dovecot.org/DOVECOT-REPO-GPG-2.4 | gpg --dearmor > /usr/share/keyrings/upstream-dovecot.gpg
-    echo \
-      "deb [signed-by=/usr/share/keyrings/upstream-dovecot.gpg] https://repo.dovecot.org/ce-2.4-latest/debian/${VERSION_CODENAME} ${VERSION_CODENAME} main" \
-      > /etc/apt/sources.list.d/upstream-dovecot.list
+    curl -fsSL https://repo.dovecot.org/DOVECOT-REPO-GPG-2.4 \
+      | gpg --dearmor >/usr/share/keyrings/upstream-dovecot.gpg
+    cat >/etc/apt/sources.list.d/upstream-dovecot.sources <<EOF
+Types: deb
+URIs: https://repo.dovecot.org/ce-2.4-latest/debian/${VERSION_CODENAME}
+Suites: ${VERSION_CODENAME}
+Components: main
+Signed-By: /usr/share/keyrings/upstream-dovecot.gpg
+EOF
 
     # Refresh package index:
     apt-get "${QUIET}" update
@@ -188,10 +193,15 @@ function _install_rspamd() {
   # NOTE: Debian 12 provides Rspamd 3.4 (too old) and Rspamd discourages it's use
 
   _log 'trace' 'Adding third-party package repository (Rspamd)'
-  curl -fsSL https://rspamd.com/apt-stable/gpg.key | gpg --dearmor > /usr/share/keyrings/upstream-rspamd.gpg
-  echo \
-    "deb [signed-by=/usr/share/keyrings/upstream-rspamd.gpg] https://rspamd.com/apt-stable/ ${VERSION_CODENAME} main" \
-    > /etc/apt/sources.list.d/upstream-rspamd.list
+  curl -fsSL https://rspamd.com/apt-stable/gpg.key \
+    | gpg --dearmor >/usr/share/keyrings/upstream-rspamd.gpg
+  cat >/etc/apt/sources.list.d/upstream-rspamd.sources <<EOF
+Types: deb
+URIs: https://rspamd.com/apt-stable/
+Suites: ${VERSION_CODENAME}
+Components: main
+Signed-By: /usr/share/keyrings/upstream-rspamd.gpg
+EOF
 
   # Refresh package index:
   apt-get "${QUIET}" update

@@ -21,6 +21,7 @@ function setup_file() {
   docker network create "${DMS_TEST_NETWORK}"
 
   # Setup local openldap service:
+  # TODO: Migrate away from `bitnamilegacy/openldap`: https://github.com/docker-mailserver/docker-mailserver/issues/4582
   docker run --rm -d --name "${CONTAINER2_NAME}" \
     --env LDAP_ADMIN_PASSWORD=admin \
     --env LDAP_ROOT='dc=example,dc=test' \
@@ -30,7 +31,7 @@ function setup_file() {
     --volume "${REPOSITORY_ROOT}/test/config/ldap/openldap/schemas/:/schemas/:ro" \
     --hostname "${FQDN_LDAP}" \
     --network "${DMS_TEST_NETWORK}" \
-    bitnami/openldap:latest
+    bitnamilegacy/openldap:latest
 
   _run_until_success_or_timeout 20 sh -c "docker logs ${CONTAINER2_NAME} 2>&1 | grep 'LDAP setup finished'"
 
@@ -122,7 +123,7 @@ function setup_file() {
 
   # Extra ENV needed to support specific test-cases:
   local ENV_SUPPORT=(
-    # Required for openssl commands to be successul:
+    # Required for openssl commands to be successful:
     # NOTE: snakeoil cert is created (for `docker-mailserver.invalid`) via Debian post-install script for Postfix package.
     # TODO: Use proper TLS cert
     --env SSL_TYPE='snakeoil'
@@ -404,7 +405,7 @@ function _should_exist_in_ldap_tables() {
   # Each LDAP config file sets `query_filter` to lookup a key in LDAP (values defined in `.ldif` test files)
   # `mail` (ldap-users), `mailAlias` (ldap-aliases), `mailGroupMember` (ldap-groups)
   # `postmap` is queried with the mail account address, and the LDAP service should respond with
-  # `result_attribute` which is the LDAP `mail` value (should match what we'r'e quering `postmap` with)
+  # `result_attribute` which is the LDAP `mail` value (should match what we'r'e querying `postmap` with)
 
   _run_in_container postmap -q "${MAIL_ACCOUNT}" ldap:/etc/postfix/ldap-users.cf
   assert_success

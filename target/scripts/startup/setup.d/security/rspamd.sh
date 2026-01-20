@@ -227,15 +227,15 @@ function __rspamd__setup_learning() {
     sedfile -i -E '/^}/d' /etc/dovecot/conf.d/90-sieve.conf
     cat >>/etc/dovecot/conf.d/90-sieve.conf << EOF
 
-  # From anyhwere to Junk
+  # From anywhere to Junk
   imapsieve_mailbox1_name = Junk
-  imapsieve_mailbox1_causes = COPY
+  imapsieve_mailbox1_causes = COPY APPEND
   imapsieve_mailbox1_before = file:${SIEVE_PIPE_BIN_DIR}/learn-spam.sieve
 
   # From Junk to Inbox
   imapsieve_mailbox2_name = INBOX
   imapsieve_mailbox2_from = Junk
-  imapsieve_mailbox2_causes = COPY
+  imapsieve_mailbox2_causes = COPY APPEND
   imapsieve_mailbox2_before = file:${SIEVE_PIPE_BIN_DIR}/learn-ham.sieve
 }
 EOF
